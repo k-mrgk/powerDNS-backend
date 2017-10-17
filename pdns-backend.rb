@@ -36,7 +36,7 @@ def random_choice(dup)
 end
 
 
-def sort(ip)
+def sort(ip,select_num)
   lis1 = Array.new
   lis2 = Array.new
   cnt = 0
@@ -56,10 +56,10 @@ def sort(ip)
       lis2.push(lis1[0])
         break
     end
-#    break if cnt == 3 # いくつIPアドレスを返すか
-    num = random_choice(lis1)
-    lis2.push(lis1[num])#.ip)
-    lis1.delete_at(num)
+    break if cnt >= select_num.to_i # いくつIPアドレスを返すか
+    index = random_choice(lis1)
+    lis2.push(lis1[index])#.ip)
+    lis1.delete_at(index)
     cnt += 1
   }
   return lis2
@@ -85,6 +85,20 @@ def checkweight(lis)
   end
   return false
 end
+
+
+def minimum_ttl(list)
+  ttl = 1000
+  list.each do |i|
+    if i.ttl < ttl
+      ttl = i.ttl
+    end
+  end
+  
+  return ttl
+  
+end
+
 
 $stdout.sync = true
 $syslog = Syslog.open(__FILE__)
@@ -120,21 +134,21 @@ while gets
   if checkhash(qname, qclass, qtype)
     if ["A", "ANY"].any? {|i| qtype == i } 
       list = @@config[qname][qclass]["A"]
-      arr = sort(list["ip"])
-      ttl = list["ttl"]
+      arr = sort(list["ip"], list["num"])
+      ttl = minimum_ttl(arr)
       #$syslog.info "#{$$} Sent A records"
       arr.each do |i|
         #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
-        puts ["DATA", qname, qclass, "A", i.ttl, 1, i.ip].join("\t")
+        puts ["DATA", qname, qclass, "A", ttl, 1, i.ip].join("\t")
       end
     else
       list = @@config[qname][qclass][qtype]
-      arr = sort(list["ip"])
-      ttl = list["ttl"]
+      arr = sort(list["ip"], list["num"])
+      ttl = minimum_ttl(arr)
       #$syslog.info "#{$$} Sent #{qtype} records"
       arr.each do |i|
         #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
-        puts ["DATA", qname, qclass, "A", i.ttl, 1, i.ip].join("\t")
+        puts ["DATA", qname, qclass, "A", ttl, 1, i.ip].join("\t")
       end
     end
   else
