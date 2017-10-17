@@ -56,7 +56,7 @@ def sort(ip)
       lis2.push(lis1[0])
         break
     end
-    break if cnt == 1 # いくつIPアドレスを返すか
+#    break if cnt == 3 # いくつIPアドレスを返すか
     num = random_choice(lis1)
     lis2.push(lis1[num])#.ip)
     lis1.delete_at(num)
@@ -95,7 +95,7 @@ line.strip!
 
 unless line == "HELO\t1"
   puts "FAIL"
-  $syslog.err "Recevied '#{line}'"
+  #$syslog.err "Recevied '#{line}'"
   gets
   exit
 end
@@ -103,7 +103,7 @@ end
 puts "OK Sample backend firing up\t"
 
 while gets
-  $syslog.info "#{$$} Received: #{$_}"
+  #$syslog.info "#{$$} Received: #{$_}"
   $_.strip!
   arr = $_.split(/\t/)
 
@@ -113,7 +113,7 @@ while gets
     next
   end
   type, qname, qclass, qtype, id, ip = arr
-  $syslog.info "#{type}, #{qname}, #{qclass}, #{qtype}, #{id}"
+  #$syslog.info "#{type}, #{qname}, #{qclass}, #{qtype}, #{id}"
 
   @@config = YAML.load_file("/home/vagrant/backend/wrr-config.yml")
 
@@ -122,26 +122,26 @@ while gets
       list = @@config[qname][qclass]["A"]
       arr = sort(list["ip"])
       ttl = list["ttl"]
-      $syslog.info "#{$$} Sent A records"
+      #$syslog.info "#{$$} Sent A records"
       arr.each do |i|
-        $syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
+        #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
         puts ["DATA", qname, qclass, "A", i.ttl, 1, i.ip].join("\t")
       end
     else
       list = @@config[qname][qclass][qtype]
       arr = sort(list["ip"])
       ttl = list["ttl"]
-      $syslog.info "#{$$} Sent #{qtype} records"
+      #$syslog.info "#{$$} Sent #{qtype} records"
       arr.each do |i|
-        $syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
+        #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
         puts ["DATA", qname, qclass, "A", i.ttl, 1, i.ip].join("\t")
       end
     end
   else
-    $syslog.info "NO DOMAIN #{qname} #{qclass} #{qtype}"
+    #$syslog.info "NO DOMAIN #{qname} #{qclass} #{qtype}"
   end
 
-  $syslog.info "#{$$} End of data"
+  #$syslog.info "#{$$} End of data"
   puts "END"
 
 end
