@@ -43,8 +43,8 @@ def sort(ip,select_num)
 
   # ipアドレスと重みを配列に格納
   ip.each_with_index do |i, n|
-    s = i.split(" ")
-    lis1[n] = LIST.new(s[0], s[1].to_f, s[2].to_i) 
+ #   s = i.split(" ")
+    lis1[n] = LIST.new(i[0], i[1].to_f, i[2].to_i) 
   end
   
   # 重み付けしてソート
@@ -65,13 +65,12 @@ def sort(ip,select_num)
   return lis2
 end
 
-def checkhash(qname, qclass, qtype)
+def checkhash(qname, qtype)
 
   qtype = "A" if qtype == "ANY"
-
+ 
   return false if @@config[qname].nil?
-  return false if @@config[qname][qclass].nil?
-  return false if @@config[qname][qclass][qtype].nil?
+  return false if @@config[qname][qtype.downcase].nil?
   return true
   
 end
@@ -131,9 +130,9 @@ while gets
 
   @@config = YAML.load_file("/home/vagrant/backend/wrr-config.yml")
 
-  if checkhash(qname, qclass, qtype)
+  if checkhash(qname, qtype)
     if ["A", "ANY"].any? {|i| qtype == i } 
-      list = @@config[qname][qclass]["A"]
+      list = @@config[qname]["a"]
       arr = sort(list["ip"], list["num"])
       ttl = minimum_ttl(arr)
       #$syslog.info "#{$$} Sent A records"
@@ -142,7 +141,7 @@ while gets
         puts ["DATA", qname, qclass, "A", ttl, 1, i.ip].join("\t")
       end
     else
-      list = @@config[qname][qclass][qtype]
+      list = @@config[qname][qtype]
       arr = sort(list["ip"], list["num"])
       ttl = minimum_ttl(arr)
       #$syslog.info "#{$$} Sent #{qtype} records"
