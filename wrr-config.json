@@ -1,0 +1,1 @@
+{"domain":"web.sai.test","type":"a","num":1,"record":[{"ip":"192.168.11.21","weight":100,"ttl":60},{"ip":"192.168.11.22","weight":50,"ttl":20},{"ip":"192.168.11.23","weight":10,"ttl":10}]}

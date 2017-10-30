@@ -1,7 +1,7 @@
 #! /usr/bin/ruby
 # -*- coding: utf-8 -*-
 
-require 'yaml'
+require 'json'
 require 'pp'
 require 'syslog'
 
@@ -44,7 +44,7 @@ def sort(ip,select_num)
   # ipアドレスと重みを配列に格納
   ip.each_with_index do |i, n|
  #   s = i.split(" ")
-    lis1[n] = LIST.new(i[0], i[1].to_f, i[2].to_i) 
+    lis1[n] = LIST.new(i["ip"], i["weight"].to_f, i["ttl"].to_i) 
   end
   
   # 重み付けしてソート
@@ -52,13 +52,13 @@ def sort(ip,select_num)
     if !checkweight(lis1) then
       break
     end
-    if lis1.length == 1 then
+    if lis1.length == 1 && cnt == 0 then
       lis2.push(lis1[0])
         break
     end
     break if cnt >= select_num.to_i # いくつIPアドレスを返すか
     index = random_choice(lis1)
-    lis2.push(lis1[index])#.ip)
+    lis2.push(lis1[index])
     lis1.delete_at(index)
     cnt += 1
   }
@@ -69,8 +69,8 @@ def checkhash(qname, qtype)
 
   qtype = "A" if qtype == "ANY"
  
-  return false if @@config[qname].nil?
-  return false if @@config[qname][qtype.downcase].nil?
+  return false if @@config["domain"] != qname
+  return false if @@config["type"] != qtype.downcase
   return true
   
 end
@@ -128,30 +128,20 @@ while gets
   type, qname, qclass, qtype, id, ip = arr
   #$syslog.info "#{type}, #{qname}, #{qclass}, #{qtype}, #{id}"
 
-  @@config = YAML.load_file("/home/vagrant/backend/wrr-config.yml")
-
+  File.open("/home/vagrant/backend/wrr-config.json") do |file|
+    @@config = JSON.load(file)
+  end
+  
   if checkhash(qname, qtype)
     if ["A", "ANY"].any? {|i| qtype == i } 
-      list = @@config[qname]["a"]
-      arr = sort(list["ip"], list["num"])
+      arr = sort(@@config["record"], @@config["num"])
       ttl = minimum_ttl(arr)
       #$syslog.info "#{$$} Sent A records"
       arr.each do |i|
         #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
         puts ["DATA", qname, qclass, "A", ttl, 1, i.ip].join("\t")
       end
-    else
-      list = @@config[qname][qtype]
-      arr = sort(list["ip"], list["num"])
-      ttl = minimum_ttl(arr)
-      #$syslog.info "#{$$} Sent #{qtype} records"
-      arr.each do |i|
-        #$syslog.info  ["send : ", "DATA", qname, qclass, "A", i.ttl, 1, i.ip].join(" ")
-        puts ["DATA", qname, qclass, "A", ttl, 1, i.ip].join("\t")
-      end
     end
-  else
-    #$syslog.info "NO DOMAIN #{qname} #{qclass} #{qtype}"
   end
 
   #$syslog.info "#{$$} End of data"
