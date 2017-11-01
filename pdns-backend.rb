@@ -49,7 +49,9 @@ def sort(ip,select_num)
   
   # 重み付けしてソート
   loop{
+    # すべてのIPの重みが0の場合
     if !checkweight(lis1) then
+      return lis1
       break
     end
     if lis1.length == 1 && cnt == 0 then
