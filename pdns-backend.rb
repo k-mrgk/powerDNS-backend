@@ -51,12 +51,18 @@ def sort(ip,select_num)
   loop{
     # すべてのIPの重みが0の場合
     if !checkweight(lis1) then
-      return lis1
+      if lis2.length == 0 then
+        return lis1
+      end
       break
     end
     if lis1.length == 1 && cnt == 0 then
       lis2.push(lis1[0])
         break
+    end
+    if lis1.length == 1 then
+      #lis2.push(lis1[0])
+#        break
     end
     break if cnt >= select_num.to_i # いくつIPアドレスを返すか
     index = random_choice(lis1)
