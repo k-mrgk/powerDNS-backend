@@ -33,7 +33,7 @@ func main() {
 	backend := PipeBackendStruct{}
 
 	scanner := bufio.NewScanner(os.Stdin)
-	output("Start Backend Program")
+	//output("output", "Start Backend Program")
 
 	scanner.Scan()
 	s := strings.TrimRight(scanner.Text(), "\n")
@@ -50,7 +50,6 @@ func main() {
 			fmt.Println("LOG\tPowerDNS sent unparseable line")
 			continue
 		}
-//		output(str)
 		bytes, err := ioutil.ReadFile("/home/vagrant/backend/wrr-config.json")
 		if err != nil {
 			outputError(err)
@@ -70,9 +69,20 @@ func main() {
 						break
 					}
 					fmt.Println("DATA\t" + str[1] + "\t" + str[2] + "\tA\t" + strconv.Itoa(ttl) + "\t" + "1\t" + i)
+					//output("DATA\t" + str[1] + "\t" + str[2] + "\tA\t" + strconv.Itoa(ttl) + "\t" + "-1\t" + i)
 				}
+				go outputTTL(ttl)
+
+			} else {
+				output(str)
+			}
+		case "SOA":
+			if str[1] == "sai.test" {
+				fmt.Println("DATA\t" + str[1] + "\t" + str[2] + "\tSOA\t60\t-1\tsai.test. root.sai.test 2017112601 60 60 60 60")
+				//output("DATA\t" + str[1] + "\t" + str[2] + "\tSOA\t60\t-1\tsai.test. root.sai.test 2017112601 60 60 60 60")
 			}
 		default:
+			//output(str)
 		}
 		fmt.Println("END")
 	}
@@ -98,8 +108,8 @@ func selectIPs(backend PipeBackendStruct) ([]string, int) {
 		return ips, ttl
 	}
 
-	records := make([]RecordStruct, len(backend.Records))
-	copy(records, backend.Records)
+	//records := make([]RecordStruct, len(backend.Records))
+	records := copyStruct(backend.Records)
 
 	for k := 0; k < backend.Num && len(records) > 0; k++ {
 		weight := make([]int, len(records))
@@ -125,6 +135,19 @@ func selectIPs(backend PipeBackendStruct) ([]string, int) {
 	return ips, ttl
 }
 
+func copyStruct(slice []RecordStruct) []RecordStruct {
+
+	records := []RecordStruct{}
+
+	for _, v := range slice {
+		if v.Weight != 0 {
+			records = append(records, v)
+		}
+	}
+	return records
+
+}
+
 func pop(slice []RecordStruct, index int) []RecordStruct {
 
 	result := []RecordStruct{}
@@ -144,7 +167,7 @@ func checkWeight(slice []RecordStruct) bool {
 		}
 	}
 
-	return false
+	return true
 
 }
 
@@ -168,4 +191,22 @@ func output(str interface{}) {
 	}
 	log.SetOutput(f)
 	log.Print(fmt.Sprintln(str))
+}
+
+func outputTTL(str interface{}) {
+
+	now := time.Now().Format("15:04:05")
+
+	f, err := os.OpenFile("/home/vagrant/backend/ttl.csv", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	defer f.Close()
+	if err != nil {
+		outputError(err)
+		return
+	}
+
+	_, err = f.WriteString(now + "," + fmt.Sprintln(str))
+	if err != nil {
+		outputError(err)
+	}
+	return
 }
