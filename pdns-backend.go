@@ -50,7 +50,7 @@ func main() {
 			fmt.Println("LOG\tPowerDNS sent unparseable line")
 			continue
 		}
-		bytes, err := ioutil.ReadFile("/home/vagrant/backend/wrr-config.json")
+		bytes, err := ioutil.ReadFile("/home/vagrant/backend/config.json")
 		if err != nil {
 			outputError(err)
 			return
