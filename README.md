@@ -9,7 +9,7 @@
  - 重み付けラウンドロビン
  - 重みやTTL，IPアドレスの動的な変更
 
-### pdns.conf
+## pdns.conf
 
 コンパイルして`/etc/powerDNS/backend/`においた場合の設定  
 `pipe-regex` `cache-ttl` `query-cache-ttl`は環境に合わせて変更してください
